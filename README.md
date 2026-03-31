@@ -58,38 +58,21 @@ open /Applications/ChatKey.app
 - Simplified Chinese / English UI support
 - GitHub Releases update checks
 
-## Build
-
-1. Make sure Xcode command line tools are available.
-2. From the repository root, run:
-
-```bash
-swift build
-swift test
-```
-
-For a packaged local app bundle:
-
-```bash
-./scripts/build-local-app.sh
-```
-
-To test the newest local package quickly:
-
-```bash
-pkill -x ChatKey || true
-rm -rf /Applications/ChatKey.app
-cp -R './dist/ChatKey.app' /Applications/ChatKey.app
-open /Applications/ChatKey.app
-```
-
-For release publishing, GitHub Actions signs the app with a Developer ID Application certificate and notarizes it before uploading the release archive. The workflow expects the signing and notarization secrets to be configured in the repository settings.
-
 ## Troubleshooting
 
-- If macOS blocks launch with a security warning, open via right-click -> `Open` once, or use a notarized release build.
-- If menu bar UI looks outdated, ensure no old instance is running:
-  `pkill -x ChatKey || true`, then relaunch `/Applications/ChatKey.app`.
+### Privacy Prompt Flow (First Launch)
+
+1. If macOS shows “ChatKey can’t be opened”, click `Done` first (do not click “Move to Trash”).
+2. Locate `ChatKey.app` in Finder, right-click, and choose `Open`.
+3. In the second confirmation dialog, click `Open` again.
+4. If it is still blocked, go to `System Settings -> Privacy & Security` and click `Open Anyway`.
+
+### Permission Flow (Accessibility)
+
+1. On first launch, follow the in-app prompt to open Accessibility settings.
+2. Go to `System Settings -> Privacy & Security -> Accessibility`.
+3. Enable `ChatKey` in the list.
+4. Return to ChatKey and refresh status until it shows as authorized.
 
 ## Privacy
 

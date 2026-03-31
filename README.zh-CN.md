@@ -57,37 +57,21 @@ open /Applications/ChatKey.app
 - 简体中文 / English 界面支持
 - GitHub Releases 更新检查
 
-## 构建
-
-1. 确保本机已安装 Xcode Command Line Tools。
-2. 在仓库根目录执行：
-
-```bash
-swift build
-swift test
-```
-
-如果要打出本地可运行的 app：
-
-```bash
-./scripts/build-local-app.sh
-```
-
-如果要快速覆盖本地最新包测试：
-
-```bash
-pkill -x ChatKey || true
-rm -rf /Applications/ChatKey.app
-cp -R './dist/ChatKey.app' /Applications/ChatKey.app
-open /Applications/ChatKey.app
-```
-
-正式发布时，GitHub Actions 会先使用 Developer ID Application 证书签名，再执行 notarization 和 staple，然后才上传发布包。这个流程需要在仓库的 Secrets 里配置好对应的签名和公证凭据。
-
 ## 常见问题
 
-- 如果 macOS 提示安全验证，先右键 `ChatKey.app` -> `打开` 一次，或使用已 notarize 的发布包。
-- 如果菜单栏界面看起来还是旧版本，先执行 `pkill -x ChatKey || true`，再重新打开 `/Applications/ChatKey.app`。
+### 隐私提示流程（首次打开）
+
+1. 如果出现“未打开 ChatKey”的安全提示，先点击 `完成`（不要点“移到废纸篓”）。
+2. 在 Finder 中找到 `ChatKey.app`，右键选择 `打开`。
+3. 在二次确认弹窗里再次点击 `打开`。
+4. 如仍被拦截，前往 `系统设置 -> 隐私与安全性`，点击 `仍要打开`。
+
+### 权限流程（辅助功能）
+
+1. 首次启动后，按提示进入辅助功能授权页。
+2. 打开 `系统设置 -> 隐私与安全性 -> 辅助功能`。
+3. 在列表里启用 `ChatKey` 开关。
+4. 回到 ChatKey，点击刷新状态，确认显示为已授权。
 
 ## 隐私
 
