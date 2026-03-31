@@ -29,6 +29,13 @@ It focuses on one narrow problem:
 3. Launch the app and grant Accessibility permission when prompted.
 4. Open Settings and configure per-app rules.
 
+## Pain Points
+
+- `Return` behavior is inconsistent across chat apps, causing frequent mis-send or line-break mistakes.
+- Keyboard habits break when you switch between tools (WeChat, Slack, web chats, AI apps).
+- Per-app shortcut setup is scattered and hard to maintain.
+- Users want a local-only, lightweight helper instead of a heavy system remapper.
+
 ## Features
 
 - Menu bar status and quick controls
