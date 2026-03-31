@@ -31,7 +31,7 @@ It focuses on one narrow problem:
 
 ## Pain Points
 
-- `Return` behavior is inconsistent across chat apps, causing frequent mis-send or line-break mistakes.
+- Keep your input habit consistent across Codex, VS Code, and IM chat tools: `Return` always inserts a new line, and `Command + Return` always sends the message.
 - Keyboard habits break when you switch between tools (WeChat, Slack, web chats, AI apps).
 - Per-app shortcut setup is scattered and hard to maintain.
 - Users want a local-only, lightweight helper instead of a heavy system remapper.
