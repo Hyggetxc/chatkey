@@ -4,7 +4,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/Hyggetxc/chatkey?style=flat-square)](https://github.com/Hyggetxc/chatkey/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/Hyggetxc/chatkey?style=flat-square)](https://github.com/Hyggetxc/chatkey/issues)
 
-ChatKey 是一个轻量级 macOS 菜单栏应用，用来统一不同应用里的聊天输入习惯。
+ChatKey 是一个轻量级 macOS 菜单栏应用，用来统一不同应用里的聊天输入习惯（当前发布压缩包约 453KB，不到 1MB）。
 
 它只专注一件事：
 

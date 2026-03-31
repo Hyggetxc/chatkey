@@ -4,7 +4,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/Hyggetxc/chatkey?style=flat-square)](https://github.com/Hyggetxc/chatkey/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/Hyggetxc/chatkey?style=flat-square)](https://github.com/Hyggetxc/chatkey/issues)
 
-ChatKey is a lightweight macOS menu bar app for keeping chat input habits consistent across apps.
+ChatKey is a lightweight macOS menu bar app for keeping chat input habits consistent across apps (current release ZIP is about 453 KB, under 1 MB).
 
 It focuses on one narrow problem:
 
