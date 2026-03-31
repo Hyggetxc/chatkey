@@ -17,24 +17,34 @@ It focuses on one narrow problem:
 - [English](./README.md)
 - [简体中文](./README.zh-CN.md)
 
-## Download
-
-- Latest release: [GitHub Releases](https://github.com/Hyggetxc/chatkey/releases)
-- Current prerelease: [v0.1.0-dev](https://github.com/Hyggetxc/chatkey/releases/tag/v0.1.0-dev)
-
-## Quick Start
-
-1. Download the latest `.zip` from [Releases](https://github.com/Hyggetxc/chatkey/releases).
-2. Move `ChatKey.app` to `/Applications`.
-3. Launch the app and grant Accessibility permission when prompted.
-4. Open Settings and configure per-app rules.
-
 ## Pain Points
 
 - Keep your input habit consistent across Codex, VS Code, and IM chat tools: `Return` always inserts a new line, and `Command + Return` always sends the message.
 - Keyboard habits break when you switch between tools (WeChat, Slack, web chats, AI apps).
 - Per-app shortcut setup is scattered and hard to maintain.
 - Users want a local-only, lightweight helper instead of a heavy system remapper.
+
+## Download
+
+- Latest release: [GitHub Releases](https://github.com/Hyggetxc/chatkey/releases)
+- Install from terminal (GitHub CLI):
+
+```bash
+TAG=$(gh release list --repo Hyggetxc/chatkey --limit 1 --json tagName -q '.[0].tagName')
+gh release download "$TAG" --repo Hyggetxc/chatkey --pattern "ChatKey-${TAG}.zip" --pattern "ChatKey-${TAG}.zip.sha256" --clobber
+ditto -x -k "ChatKey-${TAG}.zip" .
+rm -rf /Applications/ChatKey.app
+mv ChatKey.app /Applications/ChatKey.app
+open /Applications/ChatKey.app
+```
+
+## Usage
+
+1. Launch the app.
+2. Grant Accessibility permission when prompted.
+3. Enable ChatKey from the menu bar if needed.
+4. Create or edit per-app rules in Settings.
+5. Download releases from GitHub when you want to test a newer build.
 
 ## Features
 
@@ -47,13 +57,6 @@ It focuses on one narrow problem:
 - Local JSON persistence
 - Simplified Chinese / English UI support
 - GitHub Releases update checks
-
-## Repository Structure
-
-- `Sources/ChatKey`: main SwiftUI app code
-- `Tests/ChatKeyTests`: unit tests
-- `scripts/`: local build and packaging helpers
-- `dist/`: local build output
 
 ## Build
 
@@ -88,14 +91,6 @@ For release publishing, GitHub Actions signs the app with a Developer ID Applica
 - If menu bar UI looks outdated, ensure no old instance is running:
   `pkill -x ChatKey || true`, then relaunch `/Applications/ChatKey.app`.
 
-## Usage
-
-1. Launch the app.
-2. Grant Accessibility permission when prompted.
-3. Enable ChatKey from the menu bar if needed.
-4. Create or edit per-app rules in Settings.
-5. Download releases from GitHub when you want to test a newer build.
-
 ## Privacy
 
 - Rules and settings are stored locally on your machine.
@@ -106,4 +101,5 @@ For release publishing, GitHub Actions signs the app with a Developer ID Applica
 
 If ChatKey helps you keep chat shortcuts consistent, please consider starring the repository:
 
-- [Star ChatKey](https://github.com/Hyggetxc/chatkey)
+- Web: [Star ChatKey](https://github.com/Hyggetxc/chatkey/stargazers)
+- Terminal: `gh repo star Hyggetxc/chatkey`
