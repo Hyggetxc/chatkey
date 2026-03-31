@@ -57,6 +57,8 @@ For a packaged local app bundle:
 ./scripts/build-local-app.sh
 ```
 
+For release publishing, GitHub Actions signs the app with a Developer ID Application certificate and notarizes it before uploading the release archive. The workflow expects the signing and notarization secrets to be configured in the repository settings.
+
 ## Usage
 
 1. Launch the app.

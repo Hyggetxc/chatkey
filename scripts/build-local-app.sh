@@ -8,6 +8,7 @@ APP_VERSION="${APP_VERSION:-0.1.0-dev}"
 BUILD_NUMBER="${BUILD_NUMBER:-$(date +%Y%m%d%H%M%S)}"
 BUNDLE_ID="${BUNDLE_ID:-com.lemon.chatkey.dev}"
 DESIGNATED_REQUIREMENT="designated => identifier \"$BUNDLE_ID\""
+CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY:-}"
 ICON_SOURCE="$ROOT_DIR/Resources/AppIcon.png"
 
 # 先显式执行 release 构建，再读取产物目录，避免只有目录路径没有实际二进制文件。
@@ -22,6 +23,7 @@ CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 ICONSET_DIR="$(mktemp -d /tmp/chatkey-iconset.XXXXXX)"
+trap 'rm -rf "$ICONSET_DIR"' EXIT
 
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
@@ -87,12 +89,16 @@ cat > "$CONTENTS_DIR/Info.plist" <<EOF
 </plist>
 EOF
 
-# 这里显式写入稳定的 designated requirement，而不是让 ad-hoc 签名退化成纯 cdhash 身份。
-# 对 ChatKey 这类依赖 TCC / 辅助功能授权的工具来说，系统会把“签名要求”当作受信任身份的一部分。
-# 如果每次构建都只按 cdhash 识别，用户刚授予的权限会在下一次重建后立刻失效。
-codesign --force --deep --sign - --identifier "$BUNDLE_ID" -r="$DESIGNATED_REQUIREMENT" "$APP_DIR" >/dev/null
-
-rm -rf "$ICONSET_DIR"
+if [[ -n "$CODE_SIGN_IDENTITY" && "$CODE_SIGN_IDENTITY" != "-" ]]; then
+    # 正式发布使用 Developer ID Application 证书签名，后续由 GitHub Actions 做 notarization / staple。
+    codesign --force --deep --sign "$CODE_SIGN_IDENTITY" --options runtime --timestamp --identifier "$BUNDLE_ID" "$APP_DIR" >/dev/null
+else
+    # 本地测试仍然保留 ad-hoc 签名，方便快速迭代。
+    # 这里显式写入稳定的 designated requirement，而不是让 ad-hoc 签名退化成纯 cdhash 身份。
+    # 对 ChatKey 这类依赖 TCC / 辅助功能授权的工具来说，系统会把“签名要求”当作受信任身份的一部分。
+    # 如果每次构建都只按 cdhash 识别，用户刚授予的权限会在下一次重建后立刻失效。
+    codesign --force --deep --sign - --identifier "$BUNDLE_ID" -r="$DESIGNATED_REQUIREMENT" "$APP_DIR" >/dev/null
+fi
 
 echo "Designated requirement:"
 codesign -d -r- "$APP_DIR" 2>&1 | sed 's/^/  /'

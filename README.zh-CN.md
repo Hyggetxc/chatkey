@@ -57,6 +57,8 @@ swift test
 ./scripts/build-local-app.sh
 ```
 
+正式发布时，GitHub Actions 会先使用 Developer ID Application 证书签名，再执行 notarization 和 staple，然后才上传发布包。这个流程需要在仓库的 Secrets 里配置好对应的签名和公证凭据。
+
 ## 使用
 
 1. 启动应用。
