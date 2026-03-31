@@ -179,21 +179,25 @@ struct GeneralSettingsTabView: View {
                     tint: .secondary
                 )
 
-                HStack(spacing: 8) {
+                HStack(spacing: 10) {
                     Button(AppStrings.text(.checkForUpdates, language: language)) {
                         Task {
                             await updateManager.checkForUpdates(using: settingsStore)
                         }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .frame(minWidth: 148)
 
                     Button(AppStrings.text(.openReleasesPage, language: language)) {
                         updateManager.openReleasesPage()
                     }
                     .buttonStyle(.bordered)
+                    .controlSize(.large)
                     .disabled(!canOpenReleasesPage)
-                    .frame(maxWidth: .infinity)
+                    .frame(minWidth: 148)
+
+                    Spacer(minLength: 0)
                 }
             }
         }

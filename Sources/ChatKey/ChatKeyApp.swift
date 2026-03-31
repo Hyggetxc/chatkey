@@ -41,6 +41,7 @@ struct ChatKeyApp: App {
             MenuBarStatusIcon(status: visualStatus)
                 .help(menuBarStatusHelpText)
         }
+        .menuBarExtraStyle(.window)
 
         Settings {
             SettingsRootView(

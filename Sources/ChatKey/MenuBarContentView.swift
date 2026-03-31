@@ -22,11 +22,11 @@ struct MenuBarContentView: View {
         switch visualStatus {
         case .permissionMissing:
             return MenuStatusPresentation(
-                icon: "lock.fill",
+                icon: "exclamationmark.triangle.fill",
                 iconTint: .red,
                 iconBackground: Color.red.opacity(0.12),
-                title: AppStrings.text(.permissionsMissing, language: language),
-                subtitle: AppStrings.text(.permissionGrantHelp, language: language),
+                title: AppStrings.text(.statusPermissionMissingTitle, language: language),
+                subtitle: AppStrings.text(.statusPermissionMissingMessage, language: language),
                 showsOpenSettingsButton: true
             )
         case .paused:
@@ -34,8 +34,8 @@ struct MenuBarContentView: View {
                 icon: "pause.circle.fill",
                 iconTint: .orange,
                 iconBackground: Color.orange.opacity(0.14),
-                title: AppStrings.text(.paused, language: language),
-                subtitle: AppStrings.text(.listener, language: language),
+                title: AppStrings.text(.statusPausedTitle, language: language),
+                subtitle: AppStrings.text(.statusPausedMessage, language: language),
                 showsOpenSettingsButton: false
             )
         case .ready:
@@ -43,8 +43,8 @@ struct MenuBarContentView: View {
                 icon: "checkmark.circle.fill",
                 iconTint: .green,
                 iconBackground: Color.green.opacity(0.14),
-                title: AppStrings.text(.enabled, language: language),
-                subtitle: AppStrings.text(.listenerActive, language: language),
+                title: AppStrings.text(.statusReadyTitle, language: language),
+                subtitle: AppStrings.text(.statusReadyMessage, language: language),
                 showsOpenSettingsButton: false
             )
         }
@@ -80,12 +80,6 @@ struct MenuBarContentView: View {
             }
 
             Spacer(minLength: 0)
-
-            StatusPill(
-                title: statusPresentation.title,
-                tint: statusPresentation.iconTint,
-                systemImage: statusPillSymbolName
-            )
         }
         .padding(.horizontal, 4)
     }
@@ -93,7 +87,7 @@ struct MenuBarContentView: View {
     private var enableCard: some View {
         CardSurface(padding: 16, cornerRadius: 18) {
             HStack(alignment: .center, spacing: 14) {
-                statusGlyph(background: Color.accentColor.opacity(0.12), tint: .accentColor, symbol: "checkmark")
+                statusGlyph(background: Color.accentColor.opacity(0.12), tint: .accentColor, symbol: enableGlyphSymbol)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(AppStrings.text(.appWideToggle, language: language))
@@ -136,14 +130,6 @@ struct MenuBarContentView: View {
                     }
 
                     Spacer(minLength: 0)
-
-                    if !statusPresentation.showsOpenSettingsButton {
-                        StatusPill(
-                            title: statusPresentation.subtitle,
-                            tint: statusPresentation.iconTint,
-                            systemImage: nil
-                        )
-                    }
                 }
 
                 if statusPresentation.showsOpenSettingsButton {
@@ -160,40 +146,42 @@ struct MenuBarContentView: View {
 
     private var actionCard: some View {
         CardSurface(padding: 14, cornerRadius: 18) {
-            VStack(alignment: .leading, spacing: 10) {
-                Button(AppStrings.text(.checkForUpdates, language: language)) {
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
                     Task {
                         await updateManager.checkForUpdates(using: settingsStore)
                     }
+                } label: {
+                    menuActionLabel(AppStrings.text(.checkForUpdates, language: language))
                 }
-                .buttonStyle(.borderedProminent)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.plain)
+
+                Divider()
 
                 SettingsLink {
-                    Text(AppStrings.text(.openSettings, language: language))
-                        .frame(maxWidth: .infinity)
+                    menuActionLabel(AppStrings.text(.openSettings, language: language))
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.plain)
 
-                Button(AppStrings.text(.quit, language: language)) {
+                Divider()
+
+                Button {
                     NSApplication.shared.terminate(nil)
+                } label: {
+                    menuActionLabel(AppStrings.text(.quit, language: language))
                 }
-                .buttonStyle(.bordered)
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.plain)
             }
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
     }
 
     private var statusSubtitleText: String {
         switch diagnosticsCenter.listenerStatus {
-        case .active:
-            return statusPresentation.subtitle
-        case .inactive(.disabledByUser):
-            return AppStrings.text(.paused, language: language)
-        case .inactive(.missingPermission):
-            return AppStrings.text(.permissionRequired, language: language)
-        case let .failed(message):
+        case .failed(let message):
             return message
+        default:
+            return statusPresentation.subtitle
         }
     }
 
@@ -208,15 +196,8 @@ struct MenuBarContentView: View {
         permissionManager.requestPermission()
     }
 
-    private var statusPillSymbolName: String? {
-        switch visualStatus {
-        case .permissionMissing:
-            return "exclamationmark.triangle.fill"
-        case .paused:
-            return "pause.fill"
-        case .ready:
-            return "checkmark"
-        }
+    private var enableGlyphSymbol: String {
+        settingsStore.settings.isEnabled ? "checkmark" : "pause.fill"
     }
 
     @ViewBuilder
@@ -229,6 +210,14 @@ struct MenuBarContentView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(tint)
             }
+    }
+
+    private func menuActionLabel(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(.primary)
+            .frame(maxWidth: .infinity, minHeight: 50, alignment: .center)
+            .contentShape(Rectangle())
     }
 }
 
@@ -243,20 +232,21 @@ private struct MenuStatusPresentation {
 
 private struct BrandAppIconBadge: View {
     var body: some View {
-        let image = NSApp.applicationIconImage ?? NSImage(named: NSImage.applicationIconName) ?? NSImage(size: NSSize(width: 1, height: 1))
-
-        Image(nsImage: image)
-            .resizable()
-            .scaledToFit()
-            .frame(width: 46, height: 46)
-            .padding(6)
-            .background(
-                RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 13, style: .continuous)
-                            .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-                    )
-            )
+        ZStack {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor))
+            Image(systemName: "keyboard")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.primary)
+        }
+        .frame(width: 42, height: 42)
+        .background(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        )
     }
 }

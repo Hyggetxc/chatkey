@@ -22,6 +22,13 @@ It focuses on one narrow problem:
 - Latest release: [GitHub Releases](https://github.com/Hyggetxc/chatkey/releases)
 - Current prerelease: [v0.1.0-dev](https://github.com/Hyggetxc/chatkey/releases/tag/v0.1.0-dev)
 
+## Quick Start
+
+1. Download the latest `.zip` from [Releases](https://github.com/Hyggetxc/chatkey/releases).
+2. Move `ChatKey.app` to `/Applications`.
+3. Launch the app and grant Accessibility permission when prompted.
+4. Open Settings and configure per-app rules.
+
 ## Features
 
 - Menu bar status and quick controls
@@ -57,7 +64,22 @@ For a packaged local app bundle:
 ./scripts/build-local-app.sh
 ```
 
+To test the newest local package quickly:
+
+```bash
+pkill -x ChatKey || true
+rm -rf /Applications/ChatKey.app
+cp -R './dist/ChatKey.app' /Applications/ChatKey.app
+open /Applications/ChatKey.app
+```
+
 For release publishing, GitHub Actions signs the app with a Developer ID Application certificate and notarizes it before uploading the release archive. The workflow expects the signing and notarization secrets to be configured in the repository settings.
+
+## Troubleshooting
+
+- If macOS blocks launch with a security warning, open via right-click -> `Open` once, or use a notarized release build.
+- If menu bar UI looks outdated, ensure no old instance is running:
+  `pkill -x ChatKey || true`, then relaunch `/Applications/ChatKey.app`.
 
 ## Usage
 
