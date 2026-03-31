@@ -12,7 +12,6 @@ enum StringKey {
     case permissionsGranted
     case permissionsMissing
     case requestPermission
-    case addEmptyRule
     case rules
     case noRuleSelected
     case general
@@ -138,7 +137,6 @@ enum AppStrings {
         case .permissionsGranted: "已授权"
         case .permissionsMissing: "未授权"
         case .requestPermission: "请求授权"
-        case .addEmptyRule: "新建空规则"
         case .rules: "规则"
         case .noRuleSelected: "请选择一条规则开始编辑"
         case .appName: "应用名称"
@@ -223,7 +221,6 @@ enum AppStrings {
         case .permissionsGranted: "Granted"
         case .permissionsMissing: "Not Granted"
         case .requestPermission: "Request Permission"
-        case .addEmptyRule: "Add Empty Rule"
         case .rules: "Rules"
         case .noRuleSelected: "Select a rule to start editing"
         case .appName: "App Name"

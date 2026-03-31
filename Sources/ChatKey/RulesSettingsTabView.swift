@@ -138,13 +138,6 @@ struct RulesSettingsTabView: View {
                             title: AppStrings.text(.rules, language: language),
                             subtitle: "\(AppStrings.text(.rulesPageDescription, language: language)) · \(ruleStore.rules.count) \(AppStrings.text(.rulesSuffix, language: language))"
                         )
-
-                        Spacer(minLength: 0)
-
-                        Button(AppStrings.text(.addEmptyRule, language: language)) {
-                            selectedRuleID = ruleStore.addRule(for: nil)
-                        }
-                        .buttonStyle(.bordered)
                     }
 
                     ruleList

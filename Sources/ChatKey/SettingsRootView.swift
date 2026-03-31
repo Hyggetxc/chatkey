@@ -16,13 +16,6 @@ struct SettingsRootView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                HStack {
-                    Spacer(minLength: 0)
-                    Text(selectedSection.title(language: language))
-                        .font(.title3.weight(.semibold))
-                    Spacer(minLength: 0)
-                }
-
                 Picker("", selection: $selectedSection) {
                     ForEach(SettingsSection.allCases) { section in
                         Text(section.title(language: language)).tag(section)
