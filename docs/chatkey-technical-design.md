@@ -146,6 +146,13 @@ MVP 建议：
 - 拉取 GitHub Releases 最新版本信息
 - 对 UI 暴露“当前版本 / 最新版本 / 是否可更新”
 - 打开 GitHub Releases 页面
+- 对齐 GitHub Releases 的 tag 命名和发布资产
+
+发布约定：
+
+- 以 `vX.Y.Z` 或 `vX.Y.Z-dev` 作为 Release tag
+- Release 资产至少包含 `ChatKey.app.zip` 和校验文件
+- 更新检查优先读取 Releases 最新 tag，再和本地版本比较
 
 ### 3.10 KeyEventRouting
 

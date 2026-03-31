@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive release metadata
+        run: |
+          APP_VERSION="${GITHUB_REF_NAME#v}"
+          echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_ZIP=dist/ChatKey-${GITHUB_REF_NAME}.zip" >> "$GITHUB_ENV"
+
+      - name: Build app bundle
+        run: APP_VERSION="$APP_VERSION" BUILD_NUMBER="${GITHUB_RUN_NUMBER}" BUNDLE_ID="com.hyggetxc.chatkey" ./scripts/build-local-app.sh
+
+      - name: Package release archive
+        run: |
+          ditto -c -k --keepParent "dist/ChatKey.app" "$RELEASE_ZIP"
+          shasum -a 256 "$RELEASE_ZIP" > "$RELEASE_ZIP.sha256"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ChatKey ${{ github.ref_name }}
+          files: |
+            ${{ env.RELEASE_ZIP }}
+            ${{ env.RELEASE_ZIP }}.sha256
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

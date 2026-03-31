@@ -305,6 +305,35 @@ tccutil reset Accessibility com.lemon.chatkey.dev
 - 这一步会删除 ChatKey 旧的辅助功能授权，需要重新勾选一次
 - 只在从旧的 `cdhash` 身份切换到新的稳定身份构建时需要重点执行
 
+### 10.7 GitHub Release 发布流程
+
+目的：
+
+- 让测试用户可以直接从 GitHub Releases 下载 `ChatKey.app.zip`
+- 让 tag 推送自动生成发布资产，减少手工打包失误
+
+当前约定：
+
+- `v*` tag 会触发 GitHub Actions release workflow
+- workflow 会构建 macOS app bundle
+- workflow 会打包 `dist/ChatKey.app` 并上传 zip 与 SHA256 文件
+- Release 资产使用稳定 bundle id，避免发布版和本地开发版互相干扰
+
+本地验证方式：
+
+```bash
+APP_VERSION=0.1.0-dev \
+BUILD_NUMBER=$(date +%Y%m%d%H%M%S) \
+BUNDLE_ID=com.hyggetxc.chatkey \
+./scripts/build-local-app.sh
+```
+
+发布前建议确认：
+
+- tag 名称和 `APP_VERSION` 对得上
+- Release 页面里能看到 zip 资产
+- 用户下载后可直接双击运行
+
 ## 11. 后续扩展建议
 
 下一阶段优先级建议：
