@@ -38,6 +38,14 @@ struct RulesSettingsTabView: View {
         return ruleStore.rule(forBundleID: selectedCatalogApp.bundleId)
     }
 
+    private var selectedEditorRuleID: UUID? {
+        guard let selectedCatalogBundleID else {
+            return selectedRuleID
+        }
+
+        return ruleStore.rule(forBundleID: selectedCatalogBundleID)?.id
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             sidebarColumn
@@ -148,12 +156,34 @@ struct RulesSettingsTabView: View {
 
     private var detailColumn: some View {
         Group {
-            if let selectedRuleID {
+            if let selectedEditorRuleID {
                 RuleEditorView(
                     settingsStore: settingsStore,
                     ruleStore: ruleStore,
-                    ruleID: selectedRuleID
+                    ruleID: selectedEditorRuleID
                 )
+            } else if let selectedCatalogApp {
+                CardSurface(padding: 28) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        SectionHeaderView(
+                            title: selectedCatalogApp.name,
+                            subtitle: AppStrings.text(.selectedAppNeedsRule, language: language),
+                            systemImage: "keyboard.badge.ellipsis"
+                        )
+                        .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+
+                        HStack {
+                            Spacer(minLength: 0)
+
+                            Button(AppStrings.text(.createRuleForSelectedApp, language: language)) {
+                                selectedRuleID = ruleStore.ensureRule(for: selectedCatalogApp)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
             } else {
                 CardSurface(padding: 28) {
                     ContentUnavailableView(
@@ -165,6 +195,7 @@ struct RulesSettingsTabView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .id(selectedCatalogBundleID ?? selectedRuleID?.uuidString ?? "rule-detail-empty")
     }
 
     @ViewBuilder
@@ -182,6 +213,7 @@ struct RulesSettingsTabView: View {
                         let isSelected = selectedCatalogBundleID == app.bundleId
                         Button {
                             selectedCatalogBundleID = app.bundleId
+                            selectedRuleID = ruleStore.rule(forBundleID: app.bundleId)?.id
                         } label: {
                             SidebarRowView(
                                 title: app.name,
@@ -215,6 +247,7 @@ struct RulesSettingsTabView: View {
                         let isSelected = selectedRuleID == rule.id
                         Button {
                             selectedRuleID = rule.id
+                            selectedCatalogBundleID = rule.bundleId
                         } label: {
                             SidebarRowView(
                                 title: rule.appName,

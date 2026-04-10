@@ -49,6 +49,7 @@ enum StringKey {
     case openSelectedAppRule
     case configuredTag
     case noConfiguredRules
+    case selectedAppNeedsRule
     case settingsWindowTitle
     case statusOverview
     case preferences
@@ -198,6 +199,7 @@ enum AppStrings {
         case .openSelectedAppRule: "打开所选应用规则"
         case .configuredTag: "已配置"
         case .noConfiguredRules: "还没有配置任何规则"
+        case .selectedAppNeedsRule: "当前应用还没有规则，点击下方按钮即可开始配置映射。"
         case .settingsWindowTitle: "设置"
         case .statusOverview: "状态"
         case .preferences: "偏好设置"
@@ -282,6 +284,7 @@ enum AppStrings {
         case .openSelectedAppRule: "Open Rule for Selected App"
         case .configuredTag: "Configured"
         case .noConfiguredRules: "No rules configured yet"
+        case .selectedAppNeedsRule: "This app does not have a rule yet. Click the button below to start configuring mappings."
         case .settingsWindowTitle: "Settings"
         case .statusOverview: "Status"
         case .preferences: "Preferences"

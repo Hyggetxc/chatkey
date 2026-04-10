@@ -194,6 +194,8 @@ struct SidebarRowView: View {
             }
         }
         .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(isSelected ? tint.opacity(0.1) : Color.clear)
