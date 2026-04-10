@@ -51,13 +51,13 @@ struct MenuBarContentView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: SettingsMetrics.pageSpacing) {
             header
             enableCard
             runtimeStatusCard
             actionCard
         }
-        .padding(14)
+        .padding(16)
         .frame(width: 420)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
@@ -71,11 +71,11 @@ struct MenuBarContentView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(BrandIdentity.displayName)
-                    .font(.system(size: 27, weight: .semibold))
+                    .font(.system(size: 29, weight: .bold))
                     .foregroundStyle(.primary)
 
                 Text(AppStrings.text(.menuPopoverSubtitle, language: language))
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
             }
 
@@ -85,7 +85,7 @@ struct MenuBarContentView: View {
     }
 
     private var enableCard: some View {
-        CardSurface(padding: 16, cornerRadius: 18) {
+        CardSurface {
             HStack(alignment: .center, spacing: 14) {
                 statusGlyph(background: Color.accentColor.opacity(0.12), tint: .accentColor, symbol: enableGlyphSymbol)
 
@@ -113,8 +113,8 @@ struct MenuBarContentView: View {
     }
 
     private var runtimeStatusCard: some View {
-        CardSurface(padding: 16, cornerRadius: 18) {
-            VStack(alignment: .leading, spacing: 14) {
+        CardSurface {
+            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
                 HStack(alignment: .center, spacing: 14) {
                     statusGlyph(background: statusPresentation.iconBackground, tint: statusPresentation.iconTint, symbol: statusPresentation.icon)
 
@@ -136,8 +136,7 @@ struct MenuBarContentView: View {
                     Button(AppStrings.text(.openSystemSettings, language: language)) {
                         openAccessibilitySettings()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    .buttonStyle(.bordered)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -145,21 +144,32 @@ struct MenuBarContentView: View {
     }
 
     private var actionCard: some View {
-        CardSurface(padding: 14, cornerRadius: 18) {
-            VStack(alignment: .leading, spacing: 0) {
+        CardSurface {
+            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
+                SectionHeaderView(
+                    title: AppStrings.text(.menuActionsSubtitle, language: language)
+                )
+
+                VStack(alignment: .leading, spacing: 0) {
                 Button {
                     Task {
                         await updateManager.checkForUpdates(using: settingsStore)
                     }
                 } label: {
-                    menuActionLabel(AppStrings.text(.checkForUpdates, language: language))
+                    MenuActionRow(
+                        title: AppStrings.text(.checkForUpdates, language: language),
+                        systemImage: "arrow.down.circle"
+                    )
                 }
                 .buttonStyle(.plain)
 
                 Divider()
 
                 SettingsLink {
-                    menuActionLabel(AppStrings.text(.openSettings, language: language))
+                    MenuActionRow(
+                        title: AppStrings.text(.openSettings, language: language),
+                        systemImage: "gearshape"
+                    )
                 }
                 .buttonStyle(.plain)
 
@@ -168,11 +178,15 @@ struct MenuBarContentView: View {
                 Button {
                     NSApplication.shared.terminate(nil)
                 } label: {
-                    menuActionLabel(AppStrings.text(.quit, language: language))
+                    MenuActionRow(
+                        title: AppStrings.text(.quit, language: language),
+                        systemImage: "power"
+                    )
                 }
                 .buttonStyle(.plain)
             }
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
         }
     }
 
@@ -211,14 +225,6 @@ struct MenuBarContentView: View {
                     .foregroundStyle(tint)
             }
     }
-
-    private func menuActionLabel(_ title: String) -> some View {
-        Text(title)
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.primary)
-            .frame(maxWidth: .infinity, minHeight: 50, alignment: .center)
-            .contentShape(Rectangle())
-    }
 }
 
 private struct MenuStatusPresentation {
@@ -236,10 +242,10 @@ private struct BrandAppIconBadge: View {
             RoundedRectangle(cornerRadius: 11, style: .continuous)
                 .fill(Color(nsColor: .windowBackgroundColor))
             Image(systemName: "keyboard")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.primary)
         }
-        .frame(width: 42, height: 42)
+        .frame(width: 46, height: 46)
         .background(
             RoundedRectangle(cornerRadius: 13, style: .continuous)
                 .fill(Color(nsColor: .controlBackgroundColor))

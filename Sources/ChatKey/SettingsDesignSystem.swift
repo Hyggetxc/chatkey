@@ -1,6 +1,21 @@
 import AppKit
 import SwiftUI
 
+enum SettingsMetrics {
+    static let pageSpacing: CGFloat = 18
+    static let sectionSpacing: CGFloat = 14
+    static let cardPadding: CGFloat = 18
+    static let rowPadding: CGFloat = 14
+    static let compactRowPadding: CGFloat = 12
+    static let cardCornerRadius: CGFloat = 20
+    static let innerCornerRadius: CGFloat = 16
+    static let rowCornerRadius: CGFloat = 14
+    static let iconSize: CGFloat = 18
+    static let badgeSize: CGFloat = 40
+    static let labelColumnWidth: CGFloat = 154
+    static let buttonMinWidth: CGFloat = 148
+}
+
 struct SettingsPageBackground: View {
     var body: some View {
         Color(nsColor: .windowBackgroundColor)
@@ -13,8 +28,8 @@ struct CardSurface<Content: View>: View {
     private let content: Content
 
     init(
-        padding: CGFloat = 16,
-        cornerRadius: CGFloat = 18,
+        padding: CGFloat = SettingsMetrics.cardPadding,
+        cornerRadius: CGFloat = SettingsMetrics.cardCornerRadius,
         @ViewBuilder content: () -> Content
     ) {
         self.padding = padding
@@ -59,11 +74,11 @@ struct SectionHeaderView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 17, weight: .semibold))
 
                 if let subtitle {
                     Text(subtitle)
-                        .font(.caption)
+                        .font(.system(size: 12.5, weight: .regular))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -193,16 +208,93 @@ struct SidebarRowView: View {
                     )
             }
         }
-        .padding(12)
+        .padding(SettingsMetrics.compactRowPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: SettingsMetrics.rowCornerRadius, style: .continuous)
                 .fill(isSelected ? tint.opacity(0.1) : Color.clear)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: SettingsMetrics.rowCornerRadius, style: .continuous)
                 .strokeBorder(isSelected ? tint.opacity(0.3) : Color.primary.opacity(0.06), lineWidth: 1)
         )
+    }
+}
+
+struct SettingsFieldRow<Content: View>: View {
+    let title: String
+    let subtitle: String?
+    let alignment: VerticalAlignment
+    private let content: Content
+
+    init(
+        title: String,
+        subtitle: String? = nil,
+        alignment: VerticalAlignment = .center,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.alignment = alignment
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(alignment: alignment, spacing: 18) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(width: SettingsMetrics.labelColumnWidth, alignment: .leading)
+
+            Spacer(minLength: 0)
+
+            content
+        }
+        .padding(SettingsMetrics.rowPadding)
+        .background(
+            RoundedRectangle(cornerRadius: SettingsMetrics.innerCornerRadius, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.55))
+                .overlay(
+                    RoundedRectangle(cornerRadius: SettingsMetrics.innerCornerRadius, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct MenuActionRow: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 18, height: 18)
+
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.primary)
+
+            Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .contentShape(Rectangle())
     }
 }

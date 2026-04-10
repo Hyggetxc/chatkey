@@ -47,7 +47,7 @@ struct RulesSettingsTabView: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: SettingsMetrics.pageSpacing) {
             sidebarColumn
                 .frame(width: 360)
 
@@ -96,12 +96,12 @@ struct RulesSettingsTabView: View {
     }
 
     private var sidebarColumn: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: SettingsMetrics.pageSpacing) {
             CardSurface {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
                     SectionHeaderView(
                         title: AppStrings.text(.installedApplications, language: language),
-                        subtitle: "\(AppStrings.text(.rulesPageDescription, language: language)) · \(filteredInstalledApps.count) \(AppStrings.text(.resultsSuffix, language: language))"
+                        subtitle: "\(AppStrings.text(.installedApplicationsSubtitle, language: language)) · \(filteredInstalledApps.count) \(AppStrings.text(.resultsSuffix, language: language))"
                     )
 
                     TextField(
@@ -127,12 +127,12 @@ struct RulesSettingsTabView: View {
                         .buttonStyle(.bordered)
                         .disabled(installedAppsCatalog.loadState == .loading)
 
-                        Spacer(minLength: 0)
-
                         if installedAppsCatalog.loadState == .loading {
                             ProgressView()
                                 .controlSize(.small)
                         }
+
+                        Spacer(minLength: 0)
                     }
 
                     appList
@@ -140,13 +140,11 @@ struct RulesSettingsTabView: View {
             }
 
             CardSurface {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack {
-                        SectionHeaderView(
-                            title: AppStrings.text(.rules, language: language),
-                            subtitle: "\(AppStrings.text(.rulesPageDescription, language: language)) · \(ruleStore.rules.count) \(AppStrings.text(.rulesSuffix, language: language))"
-                        )
-                    }
+                VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
+                    SectionHeaderView(
+                        title: AppStrings.text(.rules, language: language),
+                        subtitle: "\(AppStrings.text(.configuredRulesSubtitle, language: language)) · \(ruleStore.rules.count) \(AppStrings.text(.rulesSuffix, language: language))"
+                    )
 
                     ruleList
                 }

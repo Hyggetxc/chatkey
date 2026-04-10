@@ -45,10 +45,12 @@ enum StringKey {
     case appSearchPlaceholder
     case refreshInstalledApps
     case noInstalledAppsFound
+    case installedApplicationsSubtitle
     case createRuleForSelectedApp
     case openSelectedAppRule
     case configuredTag
     case noConfiguredRules
+    case configuredRulesSubtitle
     case selectedAppNeedsRule
     case settingsWindowTitle
     case statusOverview
@@ -65,8 +67,10 @@ enum StringKey {
     case output
     case addMapping
     case deleteRule
+    case ruleDetailsSubtitle
     case menuPopoverSubtitle
     case menuToggleHint
+    case menuActionsSubtitle
     case openSystemSettings
     case statusPermissionMissingTitle
     case statusPermissionMissingMessage
@@ -148,8 +152,10 @@ enum AppStrings {
         case .output: "目标动作"
         case .addMapping: "新增映射"
         case .deleteRule: "删除规则"
+        case .ruleDetailsSubtitle: "管理当前应用的启用状态、备注和快捷键映射。"
         case .menuPopoverSubtitle: "菜单栏弹层"
         case .menuToggleHint: "点击即可即时切换键盘映射。"
+        case .menuActionsSubtitle: "快速操作"
         case .openSystemSettings: "打开系统设置"
         case .statusPermissionMissingTitle: "未授权系统设置"
         case .statusPermissionMissingMessage: "需要先在系统设置里授予辅助功能权限。"
@@ -195,10 +201,12 @@ enum AppStrings {
         case .appSearchPlaceholder: "搜索应用名称或 Bundle ID"
         case .refreshInstalledApps: "刷新应用列表"
         case .noInstalledAppsFound: "没有找到匹配的本机应用"
+        case .installedApplicationsSubtitle: "选择一个本机应用，然后为它创建或打开规则。"
         case .createRuleForSelectedApp: "为所选应用创建规则"
         case .openSelectedAppRule: "打开所选应用规则"
         case .configuredTag: "已配置"
         case .noConfiguredRules: "还没有配置任何规则"
+        case .configuredRulesSubtitle: "已经创建好的规则会显示在这里。"
         case .selectedAppNeedsRule: "当前应用还没有规则，点击下方按钮即可开始配置映射。"
         case .settingsWindowTitle: "设置"
         case .statusOverview: "状态"
@@ -233,8 +241,10 @@ enum AppStrings {
         case .output: "Output"
         case .addMapping: "Add Mapping"
         case .deleteRule: "Delete Rule"
+        case .ruleDetailsSubtitle: "Manage enable state, notes, and key mappings for the current app."
         case .menuPopoverSubtitle: "Menu Bar Popover"
         case .menuToggleHint: "Toggle keyboard remapping immediately."
+        case .menuActionsSubtitle: "Quick Actions"
         case .openSystemSettings: "Open System Settings"
         case .statusPermissionMissingTitle: "System Permission Required"
         case .statusPermissionMissingMessage: "Grant Accessibility permission in System Settings first."
@@ -280,10 +290,12 @@ enum AppStrings {
         case .appSearchPlaceholder: "Search by app name or bundle ID"
         case .refreshInstalledApps: "Refresh App List"
         case .noInstalledAppsFound: "No installed apps matched your search"
+        case .installedApplicationsSubtitle: "Choose an installed app, then create or open its rule."
         case .createRuleForSelectedApp: "Create Rule for Selected App"
         case .openSelectedAppRule: "Open Rule for Selected App"
         case .configuredTag: "Configured"
         case .noConfiguredRules: "No rules configured yet"
+        case .configuredRulesSubtitle: "Rules you have already created appear here."
         case .selectedAppNeedsRule: "This app does not have a rule yet. Click the button below to start configuring mappings."
         case .settingsWindowTitle: "Settings"
         case .statusOverview: "Status"
