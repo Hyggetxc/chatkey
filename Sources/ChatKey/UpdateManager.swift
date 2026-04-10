@@ -38,6 +38,14 @@ struct UpdateConfiguration {
         return URL(string: "https://api.github.com/repos/\(owner)/\(repository)/releases/latest")
     }
 
+    var releasesAPIURL: URL? {
+        guard let owner, let repository else {
+            return nil
+        }
+
+        return URL(string: "https://api.github.com/repos/\(owner)/\(repository)/releases")
+    }
+
     var releasesPageURL: URL? {
         guard let owner, let repository else {
             return nil
@@ -120,7 +128,7 @@ final class UpdateManager: ObservableObject {
     }
 
     func checkForUpdates(using settingsStore: SettingsStore) async {
-        guard let latestReleaseAPIURL = configuration.latestReleaseAPIURL else {
+        guard configuration.latestReleaseAPIURL != nil else {
             status = .repositoryNotConfigured
             return
         }
@@ -131,9 +139,7 @@ final class UpdateManager: ObservableObject {
         }
 
         do {
-            let (data, _) = try await session.data(from: latestReleaseAPIURL)
-            let decoder = JSONDecoder()
-            let release = try decoder.decode(GitHubRelease.self, from: data)
+            let release = try await fetchLatestAvailableRelease()
 
             if Self.normalizedTag(release.tagName) == Self.normalizedTag(currentVersion) {
                 status = .upToDate
@@ -159,6 +165,33 @@ final class UpdateManager: ObservableObject {
         }
 
         return Date().timeIntervalSince(lastCheckedAt) >= 60 * 60 * 24
+    }
+
+    private func fetchLatestAvailableRelease() async throws -> GitHubRelease {
+        let decoder = JSONDecoder()
+
+        if let latestReleaseAPIURL = configuration.latestReleaseAPIURL {
+            let (data, response) = try await session.data(from: latestReleaseAPIURL)
+            if let httpResponse = response as? HTTPURLResponse, (200 ..< 300).contains(httpResponse.statusCode) {
+                return try decoder.decode(GitHubRelease.self, from: data)
+            }
+        }
+
+        guard let releasesAPIURL = configuration.releasesAPIURL else {
+            throw URLError(.badURL)
+        }
+
+        let (data, response) = try await session.data(from: releasesAPIURL)
+        guard let httpResponse = response as? HTTPURLResponse, (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        let releases = try decoder.decode([GitHubRelease].self, from: data)
+        guard let release = releases.first(where: { $0.draft != true }) else {
+            throw URLError(.resourceUnavailable)
+        }
+
+        return release
     }
 
     private static func normalizedTag(_ rawValue: String) -> String {

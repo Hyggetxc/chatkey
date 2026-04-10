@@ -109,11 +109,15 @@ struct GitHubRelease: Codable, Equatable {
     var tagName: String
     var htmlURL: URL
     var body: String
+    var draft: Bool?
+    var prerelease: Bool?
 
     enum CodingKeys: String, CodingKey {
         case tagName = "tag_name"
         case htmlURL = "html_url"
         case body
+        case draft
+        case prerelease
     }
 }
 
