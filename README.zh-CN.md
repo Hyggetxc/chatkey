@@ -54,6 +54,7 @@ open /Applications/ChatKey.app
 - 预设聊天键位映射
 - 自定义触发键 / 目标动作
 - 本地 JSON 持久化
+- 开机自启动
 - 简体中文 / English 界面支持
 - GitHub Releases 更新检查
 

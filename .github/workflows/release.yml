@@ -23,7 +23,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check signing configuration
+        run: |
+          if [[ -n "$APPLE_ID" \
+            && -n "$APPLE_TEAM_ID" \
+            && -n "$APPLE_APP_SPECIFIC_PASSWORD" \
+            && -n "$DEVELOPER_ID_CERTIFICATE_P12_BASE64" \
+            && -n "$DEVELOPER_ID_CERTIFICATE_PASSWORD" ]]; then
+            echo "HAS_SIGNING_SECRETS=true" >> "$GITHUB_ENV"
+          else
+            echo "HAS_SIGNING_SECRETS=false" >> "$GITHUB_ENV"
+          fi
+
       - name: Configure code signing keychain
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: |
           KEYCHAIN_PATH="$RUNNER_TEMP/chatkey-signing.keychain-db"
           KEYCHAIN_PASSWORD="$(uuidgen)"
@@ -48,6 +61,7 @@ jobs:
           echo "SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
 
       - name: Store notarization credentials
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: |
           xcrun notarytool store-credentials "$NOTARY_KEYCHAIN_PROFILE" \
             --apple-id "$APPLE_ID" \
@@ -65,6 +79,7 @@ jobs:
         run: APP_VERSION="$APP_VERSION" BUILD_NUMBER="${GITHUB_RUN_NUMBER}" BUNDLE_ID="com.hyggetxc.chatkey" CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" ./scripts/build-local-app.sh
 
       - name: Notarize app bundle
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: |
           ditto -c -k --keepParent "dist/ChatKey.app" "$NOTARIZATION_ZIP"
           xcrun notarytool submit "$NOTARIZATION_ZIP" --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" --wait

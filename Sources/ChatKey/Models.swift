@@ -102,7 +102,39 @@ struct AppSettings: Codable, Equatable {
     var isEnabled: Bool = true
     var language: AppLanguage = .system
     var autoCheckForUpdates: Bool = true
+    var launchAtLogin: Bool = true
     var lastUpdateCheckAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case language
+        case autoCheckForUpdates
+        case launchAtLogin
+        case lastUpdateCheckAt
+    }
+
+    init(
+        isEnabled: Bool = true,
+        language: AppLanguage = .system,
+        autoCheckForUpdates: Bool = true,
+        launchAtLogin: Bool = true,
+        lastUpdateCheckAt: Date? = nil
+    ) {
+        self.isEnabled = isEnabled
+        self.language = language
+        self.autoCheckForUpdates = autoCheckForUpdates
+        self.launchAtLogin = launchAtLogin
+        self.lastUpdateCheckAt = lastUpdateCheckAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
+        language = try container.decodeIfPresent(AppLanguage.self, forKey: .language) ?? .system
+        autoCheckForUpdates = try container.decodeIfPresent(Bool.self, forKey: .autoCheckForUpdates) ?? true
+        launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? true
+        lastUpdateCheckAt = try container.decodeIfPresent(Date.self, forKey: .lastUpdateCheckAt)
+    }
 }
 
 struct GitHubRelease: Codable, Equatable {

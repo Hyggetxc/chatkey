@@ -18,6 +18,7 @@ func settingsDefaultToEnabledChineseAwareConfiguration() async throws {
 
     #expect(settings.isEnabled)
     #expect(settings.autoCheckForUpdates)
+    #expect(settings.launchAtLogin)
     #expect(settings.language == .system)
 }
 

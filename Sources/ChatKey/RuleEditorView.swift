@@ -17,13 +17,11 @@ struct RuleEditorView: View {
     var body: some View {
         if let rule {
             VStack(alignment: .leading, spacing: SettingsMetrics.pageSpacing) {
-                infoPanel(rule: rule)
-                mappingsPanel(rule: rule)
-                deletePanel
+                editorPanel(rule: rule)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            CardSurface(padding: 24) {
+            GlassSurface(padding: 24) {
                 ContentUnavailableView(
                     AppStrings.text(.noRuleSelected, language: language),
                     systemImage: "keyboard"
@@ -33,83 +31,102 @@ struct RuleEditorView: View {
         }
     }
 
-    private func infoPanel(rule: AppRule) -> some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                SectionHeaderView(
-                    title: rule.appName,
-                    subtitle: AppStrings.text(.ruleDetailsSubtitle, language: language),
-                    systemImage: "keyboard"
+    private func editorPanel(rule: AppRule) -> some View {
+        LiquidPanel {
+            VStack(alignment: .leading, spacing: 14) {
+                appIdentityHeader(rule: rule)
+                notesGroup(rule: rule)
+                mappingsGroup(rule: rule)
+                deleteRuleRow
+            }
+        }
+    }
+
+    private func appIdentityHeader(rule: AppRule) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "keyboard")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 42, height: 42)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
                 )
 
-                SettingsFieldRow(title: AppStrings.text(.ruleEnabled, language: language)) {
-                    Toggle("", isOn: Binding(
-                        get: { rule.isEnabled },
-                        set: { ruleStore.updateRuleEnabled($0, ruleID: ruleID) }
-                    ))
-                    .labelsHidden()
-                }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(rule.appName)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(.primary)
 
-                SettingsFieldRow(title: AppStrings.text(.appName, language: language)) {
-                    Text(rule.appName)
-                        .font(.system(size: 14, weight: .semibold))
-                }
+                Text(rule.bundleId)
+                    .font(.system(size: 12, weight: .regular, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
 
-                SettingsFieldRow(title: AppStrings.text(.bundleIdentifier, language: language), alignment: .top) {
-                    Text(rule.bundleId)
-                        .font(.system(.body, design: .monospaced))
-                        .fontWeight(.medium)
-                        .frame(maxWidth: 360, alignment: .trailing)
-                        .multilineTextAlignment(.trailing)
-                }
+            Spacer(minLength: 0)
 
-                SettingsFieldRow(
-                    title: AppStrings.text(.notes, language: language),
-                    alignment: .top
-                ) {
-                    TextField(
-                        AppStrings.text(.notes, language: language),
-                        text: Binding(
-                            get: { rule.notes },
-                            set: { ruleStore.updateRuleNotes($0, ruleID: ruleID) }
-                        ),
-                        axis: .vertical
-                    )
-                    .lineLimit(2...3)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 320)
-                }
+            Toggle("", isOn: Binding(
+                get: { rule.isEnabled },
+                set: { ruleStore.updateRuleEnabled($0, ruleID: ruleID) }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+        }
+        .padding(.horizontal, 2)
+    }
+
+    private func notesGroup(rule: AppRule) -> some View {
+        SettingsGroup {
+            SettingsGroupRow(
+                title: AppStrings.text(.notes, language: language),
+                alignment: .top
+            ) {
+                TextField(
+                    AppStrings.text(.notes, language: language),
+                    text: Binding(
+                        get: { rule.notes },
+                        set: { ruleStore.updateRuleNotes($0, ruleID: ruleID) }
+                    ),
+                    axis: .vertical
+                )
+                .lineLimit(1...3)
+                .textFieldStyle(.roundedBorder)
+                .frame(maxWidth: 420)
             }
         }
     }
 
-    private func mappingsPanel(rule: AppRule) -> some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                HStack(alignment: .firstTextBaseline) {
-                    SectionHeaderView(
-                        title: AppStrings.text(.mappings, language: language),
-                        subtitle: AppStrings.text(.ruleMappingsSubtitle, language: language)
-                    )
-
-                    Spacer(minLength: 0)
-
-                    Button(AppStrings.text(.addMapping, language: language)) {
-                        ruleStore.addMapping(to: ruleID)
-                    }
-                    .buttonStyle(.borderedProminent)
+    private func mappingsGroup(rule: AppRule) -> some View {
+        SettingsGroup {
+            SettingsGroupRow(
+                title: AppStrings.text(.mappings, language: language),
+                subtitle: AppStrings.text(.ruleMappingsSubtitle, language: language),
+                alignment: .top
+            ) {
+                Button {
+                    ruleStore.addMapping(to: ruleID)
+                } label: {
+                    Label(AppStrings.text(.addMapping, language: language), systemImage: "plus")
                 }
+                .buttonStyle(LiquidButtonStyle(kind: .primary))
+            }
 
-                VStack(spacing: 10) {
-                    ForEach(rule.mappings) { mapping in
-                        mappingRow(mapping, ruleID: ruleID)
-                    }
+            if !rule.mappings.isEmpty {
+                SettingsDivider()
+            }
+
+            ForEach(Array(rule.mappings.enumerated()), id: \.element.id) { index, mapping in
+                if index > 0 {
+                    SettingsDivider()
                 }
+                mappingRow(mapping, ruleID: ruleID)
             }
         }
     }
 
-    private var deletePanel: some View {
+    private var deleteRuleRow: some View {
         HStack {
             Spacer(minLength: 0)
             Button(role: .destructive) {
@@ -117,59 +134,38 @@ struct RuleEditorView: View {
             } label: {
                 Label(AppStrings.text(.deleteRule, language: language), systemImage: "trash")
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(LiquidButtonStyle(kind: .destructive))
         }
     }
 
     @ViewBuilder
     private func mappingRow(_ mapping: KeyMapping, ruleID: UUID) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(AppStrings.text(.trigger, language: language))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
-
-                Picker(
-                    AppStrings.text(.triggerPlaceholder, language: language),
-                    selection: Binding(
-                        get: { mapping.trigger },
-                        set: { ruleStore.updateMappingTrigger(ruleID: ruleID, mappingID: mapping.id, trigger: $0) }
-                    )
-                ) {
-                    ForEach(TriggerKey.allCases) { trigger in
-                        Text(AppStrings.trigger(trigger, language: language)).tag(trigger)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(minWidth: 170)
-            }
+        HStack(alignment: .center, spacing: 10) {
+            mappingPicker(
+                title: AppStrings.text(.triggerPlaceholder, language: language),
+                selection: Binding(
+                    get: { mapping.trigger },
+                    set: { ruleStore.updateMappingTrigger(ruleID: ruleID, mappingID: mapping.id, trigger: $0) }
+                ),
+                values: TriggerKey.allCases,
+                label: { AppStrings.trigger($0, language: language) }
+            )
 
             Image(systemName: "arrow.right")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .padding(.top, 18)
+                .foregroundStyle(.tertiary)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(AppStrings.text(.output, language: language))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            mappingPicker(
+                title: AppStrings.text(.outputPlaceholder, language: language),
+                selection: Binding(
+                    get: { mapping.output },
+                    set: { ruleStore.updateMappingOutput(ruleID: ruleID, mappingID: mapping.id, output: $0) }
+                ),
+                values: OutputAction.allCases,
+                label: { AppStrings.output($0, language: language) }
+            )
 
-                Picker(
-                    AppStrings.text(.outputPlaceholder, language: language),
-                    selection: Binding(
-                        get: { mapping.output },
-                        set: { ruleStore.updateMappingOutput(ruleID: ruleID, mappingID: mapping.id, output: $0) }
-                    )
-                ) {
-                    ForEach(OutputAction.allCases) { output in
-                        Text(AppStrings.output(output, language: language)).tag(output)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(minWidth: 170)
-            }
-
-            Spacer(minLength: 0)
+            Spacer(minLength: 8)
 
             Button(role: .destructive) {
                 ruleStore.removeMapping(ruleID: ruleID, mappingID: mapping.id)
@@ -178,16 +174,31 @@ struct RuleEditorView: View {
                     .frame(width: 28, height: 28)
             }
             .buttonStyle(.borderless)
-            .padding(.top, 18)
         }
-        .padding(SettingsMetrics.rowPadding)
-        .background(
-            RoundedRectangle(cornerRadius: SettingsMetrics.innerCornerRadius, style: .continuous)
-                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.55))
-                .overlay(
-                    RoundedRectangle(cornerRadius: SettingsMetrics.innerCornerRadius, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-                )
+        .padding(.horizontal, SettingsMetrics.rowPadding)
+        .padding(.vertical, 9)
+        .frame(minHeight: 50)
+        .contentShape(Rectangle())
+    }
+
+    private func mappingPicker<Value: Hashable & Identifiable>(
+        title: String,
+        selection: Binding<Value>,
+        values: [Value],
+        label: @escaping (Value) -> String
+    ) -> some View {
+        Picker(title, selection: selection) {
+            ForEach(values) { value in
+                Text(label(value)).tag(value)
+            }
+        }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .frame(minWidth: 132)
+        .background(.thinMaterial, in: Capsule(style: .continuous))
+        .overlay(
+            Capsule(style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
         )
     }
 }

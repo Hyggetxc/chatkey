@@ -55,6 +55,7 @@ open /Applications/ChatKey.app
 - Preset chat key mappings
 - Custom trigger/output mappings
 - Local JSON persistence
+- Launch at login
 - Simplified Chinese / English UI support
 - GitHub Releases update checks
 

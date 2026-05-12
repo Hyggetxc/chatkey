@@ -34,6 +34,7 @@ final class AppContainer {
     }
 
     func start() {
+        LaunchAtLoginManager.setEnabled(settingsStore.settings.launchAtLogin)
         updateManager.scheduleStartupCheck(using: settingsStore)
         eventTapService.startIfNeeded()
     }

@@ -51,143 +51,123 @@ struct MenuBarContentView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SettingsMetrics.pageSpacing) {
-            header
-            enableCard
-            runtimeStatusCard
-            actionCard
+        VStack(alignment: .leading, spacing: 10) {
+            statusControl
+
+            if statusPresentation.showsOpenSettingsButton {
+                Button {
+                    openAccessibilitySettings()
+                } label: {
+                    Label(AppStrings.text(.openSystemSettings, language: language), systemImage: "switch.2")
+                        .font(.system(size: 13.5, weight: .semibold))
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+            }
+
+            actionRows
         }
-        .padding(16)
-        .frame(width: 420)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .padding(8)
+        .frame(width: 280)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(.regularMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.28), lineWidth: 1)
+                )
+        )
+        .padding(4)
         .onAppear {
             permissionManager.refresh()
         }
     }
 
-    private var header: some View {
-        HStack(alignment: .center, spacing: 14) {
-            BrandAppIconBadge()
+    private var statusControl: some View {
+        HStack(alignment: .center, spacing: 10) {
+            BrandAppIconBadge(status: visualStatus)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(BrandIdentity.displayName)
-                    .font(.system(size: 29, weight: .bold))
+                    .font(.system(size: 15.5, weight: .semibold))
                     .foregroundStyle(.primary)
 
-                Text(AppStrings.text(.menuPopoverSubtitle, language: language))
-                    .font(.system(size: 13, weight: .medium))
+                Text(statusPresentation.title)
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
 
-            Spacer(minLength: 0)
+            Spacer(minLength: 8)
+
+            Toggle("", isOn: Binding(
+                get: { settingsStore.settings.isEnabled },
+                set: { settingsStore.setAppEnabled($0) }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.small)
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 9)
+        .frame(minHeight: 46)
+        .background(
+            Capsule(style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.52))
+                .shadow(color: .black.opacity(0.06), radius: 10, y: 2)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .strokeBorder(Color.white.opacity(0.35), lineWidth: 1)
+        )
+        .help(statusSubtitleText)
     }
 
-    private var enableCard: some View {
-        CardSurface {
-            HStack(alignment: .center, spacing: 14) {
-                statusGlyph(background: Color.accentColor.opacity(0.12), tint: .accentColor, symbol: enableGlyphSymbol)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(AppStrings.text(.appWideToggle, language: language))
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.primary)
-
-                    Text(AppStrings.text(.menuToggleHint, language: language))
-                        .font(.system(size: 12.5, weight: .regular))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+    private var actionRows: some View {
+        VStack(spacing: 0) {
+            Button {
+                Task {
+                    await updateManager.checkForUpdates(using: settingsStore)
                 }
-
-                Spacer(minLength: 0)
-
-                Toggle("", isOn: Binding(
-                    get: { settingsStore.settings.isEnabled },
-                    set: { settingsStore.setAppEnabled($0) }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-            }
-        }
-    }
-
-    private var runtimeStatusCard: some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                HStack(alignment: .center, spacing: 14) {
-                    statusGlyph(background: statusPresentation.iconBackground, tint: statusPresentation.iconTint, symbol: statusPresentation.icon)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(statusPresentation.title)
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.primary)
-
-                        Text(statusSubtitleText)
-                            .font(.system(size: 12.5, weight: .regular))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: 0)
-                }
-
-                if statusPresentation.showsOpenSettingsButton {
-                    Button(AppStrings.text(.openSystemSettings, language: language)) {
-                        openAccessibilitySettings()
-                    }
-                    .buttonStyle(.bordered)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-        }
-    }
-
-    private var actionCard: some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                SectionHeaderView(
-                    title: AppStrings.text(.menuActionsSubtitle, language: language)
+            } label: {
+                MenuActionRow(
+                    title: AppStrings.text(.checkForUpdates, language: language),
+                    systemImage: "arrow.down.circle"
                 )
-
-                VStack(alignment: .leading, spacing: 0) {
-                Button {
-                    Task {
-                        await updateManager.checkForUpdates(using: settingsStore)
-                    }
-                } label: {
-                    MenuActionRow(
-                        title: AppStrings.text(.checkForUpdates, language: language),
-                        systemImage: "arrow.down.circle"
-                    )
-                }
-                .buttonStyle(.plain)
-
-                Divider()
-
-                SettingsLink {
-                    MenuActionRow(
-                        title: AppStrings.text(.openSettings, language: language),
-                        systemImage: "gearshape"
-                    )
-                }
-                .buttonStyle(.plain)
-
-                Divider()
-
-                Button {
-                    NSApplication.shared.terminate(nil)
-                } label: {
-                    MenuActionRow(
-                        title: AppStrings.text(.quit, language: language),
-                        systemImage: "power"
-                    )
-                }
-                .buttonStyle(.plain)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .buttonStyle(.plain)
+
+            MenuDivider()
+
+            SettingsLink {
+                MenuActionRow(
+                    title: AppStrings.text(.openSettings, language: language),
+                    systemImage: "gearshape"
+                )
             }
+            .buttonStyle(.plain)
+
+            MenuDivider()
+
+            Button {
+                NSApplication.shared.terminate(nil)
+            } label: {
+                MenuActionRow(
+                    title: AppStrings.text(.quit, language: language),
+                    systemImage: "power"
+                )
+            }
+            .buttonStyle(.plain)
         }
+        .background(
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.28))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
     }
 
     private var statusSubtitleText: String {
@@ -209,22 +189,6 @@ struct MenuBarContentView: View {
 
         permissionManager.requestPermission()
     }
-
-    private var enableGlyphSymbol: String {
-        settingsStore.settings.isEnabled ? "checkmark" : "pause.fill"
-    }
-
-    @ViewBuilder
-    private func statusGlyph(background: Color, tint: Color, symbol: String) -> some View {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(background)
-            .frame(width: 34, height: 34)
-            .overlay {
-                Image(systemName: symbol)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(tint)
-            }
-    }
 }
 
 private struct MenuStatusPresentation {
@@ -237,22 +201,50 @@ private struct MenuStatusPresentation {
 }
 
 private struct BrandAppIconBadge: View {
+    let status: AppVisualStatus
+
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .fill(Color(nsColor: .windowBackgroundColor))
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.8))
+
             Image(systemName: "keyboard")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.primary)
+
+            Circle()
+                .fill(statusTint)
+                .frame(width: 7, height: 7)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .padding(4)
         }
-        .frame(width: 46, height: 46)
+        .frame(width: 30, height: 30)
         .background(
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.8))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.36), lineWidth: 1)
         )
+    }
+
+    private var statusTint: Color {
+        switch status {
+        case .permissionMissing:
+            return .red
+        case .paused:
+            return .orange
+        case .ready:
+            return .green
+        }
+    }
+}
+
+private struct MenuDivider: View {
+    var body: some View {
+        Divider()
+            .padding(.leading, 46)
+            .padding(.trailing, 10)
     }
 }

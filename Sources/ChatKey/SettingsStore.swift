@@ -41,6 +41,12 @@ final class SettingsStore: ObservableObject {
         save()
     }
 
+    func setLaunchAtLogin(_ isEnabled: Bool) {
+        settings.launchAtLogin = isEnabled
+        save()
+        LaunchAtLoginManager.setEnabled(isEnabled)
+    }
+
     func recordUpdateCheck(at date: Date = .now) {
         settings.lastUpdateCheckAt = date
         save()

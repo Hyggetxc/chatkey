@@ -20,6 +20,7 @@ enum StringKey {
     case simplifiedChinese
     case english
     case autoCheckUpdates
+    case launchAtLogin
     case checkForUpdates
     case updates
     case openReleasesPage
@@ -49,6 +50,8 @@ enum StringKey {
     case createRuleForSelectedApp
     case openSelectedAppRule
     case configuredTag
+    case unconfiguredTag
+    case allAppsFilter
     case noConfiguredRules
     case configuredRulesSubtitle
     case selectedAppNeedsRule
@@ -176,6 +179,7 @@ enum AppStrings {
         case .simplifiedChinese: "简体中文"
         case .english: "English"
         case .autoCheckUpdates: "自动检查更新"
+        case .launchAtLogin: "开机自启动"
         case .checkForUpdates: "检测更新"
         case .updates: "更新"
         case .openReleasesPage: "前往 GitHub 下载"
@@ -205,6 +209,8 @@ enum AppStrings {
         case .createRuleForSelectedApp: "为所选应用创建规则"
         case .openSelectedAppRule: "打开所选应用规则"
         case .configuredTag: "已配置"
+        case .unconfiguredTag: "未配置"
+        case .allAppsFilter: "全部"
         case .noConfiguredRules: "还没有配置任何规则"
         case .configuredRulesSubtitle: "已经创建好的规则会显示在这里。"
         case .selectedAppNeedsRule: "当前应用还没有规则，点击下方按钮即可开始配置映射。"
@@ -265,6 +271,7 @@ enum AppStrings {
         case .simplifiedChinese: "Simplified Chinese"
         case .english: "English"
         case .autoCheckUpdates: "Automatically Check for Updates"
+        case .launchAtLogin: "Launch at Login"
         case .checkForUpdates: "Check for Updates"
         case .updates: "Updates"
         case .openReleasesPage: "Open GitHub Releases"
@@ -294,6 +301,8 @@ enum AppStrings {
         case .createRuleForSelectedApp: "Create Rule for Selected App"
         case .openSelectedAppRule: "Open Rule for Selected App"
         case .configuredTag: "Configured"
+        case .unconfiguredTag: "Not Configured"
+        case .allAppsFilter: "All"
         case .noConfiguredRules: "No rules configured yet"
         case .configuredRulesSubtitle: "Rules you have already created appear here."
         case .selectedAppNeedsRule: "This app does not have a rule yet. Click the button below to start configuring mappings."

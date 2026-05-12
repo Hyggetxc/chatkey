@@ -36,7 +36,6 @@ struct ChatKeyApp: App {
                 updateManager: updateManager,
                 diagnosticsCenter: diagnosticsCenter
             )
-            .frame(minWidth: 420)
         } label: {
             MenuBarStatusIcon(status: visualStatus)
                 .help(menuBarStatusHelpText)

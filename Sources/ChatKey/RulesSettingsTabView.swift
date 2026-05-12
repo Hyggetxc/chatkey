@@ -3,11 +3,12 @@ import SwiftUI
 struct RulesSettingsTabView: View {
     @ObservedObject var settingsStore: SettingsStore
     @ObservedObject var ruleStore: RuleStore
+    @ObservedObject var installedAppsCatalog: InstalledAppsCatalogStore
 
-    @StateObject private var installedAppsCatalog = InstalledAppsCatalogStore()
     @State private var selectedRuleID: UUID?
     @State private var selectedCatalogBundleID: String?
     @State private var appSearchText = ""
+    @State private var ruleFilter: RuleListFilter = .all
 
     private var language: AppLanguage {
         settingsStore.settings.language
@@ -15,13 +16,26 @@ struct RulesSettingsTabView: View {
 
     private var filteredInstalledApps: [AppDescriptor] {
         let query = appSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else {
-            return installedAppsCatalog.apps
+        let searchedApps: [AppDescriptor]
+
+        if query.isEmpty {
+            searchedApps = installedAppsCatalog.apps
+        } else {
+            searchedApps = installedAppsCatalog.apps.filter { app in
+                app.name.localizedCaseInsensitiveContains(query)
+                    || app.bundleId.localizedCaseInsensitiveContains(query)
+            }
         }
 
-        return installedAppsCatalog.apps.filter { app in
-            app.name.localizedCaseInsensitiveContains(query)
-                || app.bundleId.localizedCaseInsensitiveContains(query)
+        return searchedApps.filter { app in
+            switch ruleFilter {
+            case .all:
+                return true
+            case .configured:
+                return ruleStore.rule(forBundleID: app.bundleId) != nil
+            case .unconfigured:
+                return ruleStore.rule(forBundleID: app.bundleId) == nil
+            }
         }
     }
 
@@ -47,26 +61,21 @@ struct RulesSettingsTabView: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: SettingsMetrics.pageSpacing) {
+        HStack(alignment: .top, spacing: 18) {
             sidebarColumn
-                .frame(width: 360)
+                .frame(width: 352)
 
             detailColumn
         }
-        .frame(maxWidth: 1120, alignment: .topLeading)
+        .frame(maxWidth: 1180, alignment: .topLeading)
         .onAppear {
-            if selectedRuleID == nil {
-                selectedRuleID = ruleStore.rules.first?.id
-            }
-
-            if selectedCatalogBundleID == nil {
-                selectedCatalogBundleID = installedAppsCatalog.apps.first?.bundleId
-            }
+            initializeSelectionIfNeeded()
         }
         .onChange(of: ruleStore.rules) { _, newRules in
             if let selectedRuleID, !newRules.contains(where: { $0.id == selectedRuleID }) {
                 self.selectedRuleID = newRules.first?.id
             }
+            ensureSelectionVisibleInFilteredApps()
         }
         .onChange(of: installedAppsCatalog.apps) { _, newApps in
             guard let firstApp = newApps.first else {
@@ -75,7 +84,10 @@ struct RulesSettingsTabView: View {
             }
 
             guard let selectedCatalogBundleID else {
-                self.selectedCatalogBundleID = firstApp.bundleId
+                initializeSelectionIfNeeded()
+                if self.selectedCatalogBundleID == nil {
+                    self.selectedCatalogBundleID = firstApp.bundleId
+                }
                 return
             }
 
@@ -84,69 +96,119 @@ struct RulesSettingsTabView: View {
             }
         }
         .onChange(of: appSearchText) { _, _ in
-            guard
-                let selectedCatalogBundleID,
-                !filteredInstalledApps.contains(where: { $0.bundleId == selectedCatalogBundleID })
-            else {
-                return
-            }
-
-            self.selectedCatalogBundleID = filteredInstalledApps.first?.bundleId
+            ensureSelectionVisibleInFilteredApps()
+        }
+        .onChange(of: ruleFilter) { _, _ in
+            ensureSelectionVisibleInFilteredApps()
         }
     }
 
+    private func initializeSelectionIfNeeded() {
+        if
+            selectedCatalogBundleID == nil,
+            let firstConfiguredRule = ruleStore.rules.first,
+            installedAppsCatalog.apps.contains(where: { $0.bundleId == firstConfiguredRule.bundleId })
+        {
+            selectedRuleID = firstConfiguredRule.id
+            selectedCatalogBundleID = firstConfiguredRule.bundleId
+            return
+        }
+
+        if selectedCatalogBundleID == nil {
+            selectedCatalogBundleID = installedAppsCatalog.apps.first?.bundleId
+        }
+
+        if selectedRuleID == nil {
+            selectedRuleID = selectedCatalogBundleID.flatMap { ruleStore.rule(forBundleID: $0)?.id }
+                ?? ruleStore.rules.first?.id
+        }
+    }
+
+    private func ensureSelectionVisibleInFilteredApps() {
+        guard
+            let selectedCatalogBundleID,
+            !filteredInstalledApps.contains(where: { $0.bundleId == selectedCatalogBundleID })
+        else {
+            return
+        }
+
+        self.selectedCatalogBundleID = filteredInstalledApps.first?.bundleId
+        selectedRuleID = filteredInstalledApps.first.flatMap { ruleStore.rule(forBundleID: $0.bundleId)?.id }
+    }
+
+    private var filterPicker: some View {
+        Picker("", selection: $ruleFilter) {
+            ForEach(RuleListFilter.allCases) { filter in
+                Text(filter.title(language: language)).tag(filter)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+
     private var sidebarColumn: some View {
-        VStack(alignment: .leading, spacing: SettingsMetrics.pageSpacing) {
-            CardSurface {
-                VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                    SectionHeaderView(
-                        title: AppStrings.text(.installedApplications, language: language),
-                        subtitle: "\(AppStrings.text(.installedApplicationsSubtitle, language: language)) · \(filteredInstalledApps.count) \(AppStrings.text(.resultsSuffix, language: language))"
-                    )
+        LiquidPanel {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(AppStrings.text(.rules, language: language))
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+
+                        Text("\(filteredInstalledApps.count) \(AppStrings.text(.resultsSuffix, language: language)) · \(ruleStore.rules.count) \(AppStrings.text(.rulesSuffix, language: language))")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    if installedAppsCatalog.loadState == .loading {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+
+                    Button {
+                        installedAppsCatalog.reload()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(LiquidIconButtonStyle())
+                    .disabled(installedAppsCatalog.loadState == .loading)
+                }
+
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
 
                     TextField(
                         AppStrings.text(.appSearchPlaceholder, language: language),
                         text: $appSearchText
                     )
-                    .textFieldStyle(.roundedBorder)
-
-                    HStack(spacing: 10) {
-                        Button(primaryActionTitle) {
-                            guard let selectedCatalogApp else {
-                                return
-                            }
-
-                            selectedRuleID = ruleStore.ensureRule(for: selectedCatalogApp)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(selectedCatalogApp == nil)
-
-                        Button(AppStrings.text(.refreshInstalledApps, language: language)) {
-                            installedAppsCatalog.reload()
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(installedAppsCatalog.loadState == .loading)
-
-                        if installedAppsCatalog.loadState == .loading {
-                            ProgressView()
-                                .controlSize(.small)
-                        }
-
-                        Spacer(minLength: 0)
-                    }
-
-                    appList
+                    .textFieldStyle(.plain)
                 }
-            }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(SettingsTheme.cardTintStrong.opacity(0.50))
+                .clipShape(Capsule())
+                .overlay {
+                    Capsule().stroke(SettingsTheme.hairline, lineWidth: 1)
+                }
 
-            CardSurface {
-                VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                    SectionHeaderView(
-                        title: AppStrings.text(.rules, language: language),
-                        subtitle: "\(AppStrings.text(.configuredRulesSubtitle, language: language)) · \(ruleStore.rules.count) \(AppStrings.text(.rulesSuffix, language: language))"
-                    )
+                filterPicker
 
-                    ruleList
+                appList
+
+                HStack(spacing: 10) {
+                    Button {
+                        guard let selectedCatalogApp else {
+                            return
+                        }
+
+                        selectedRuleID = ruleStore.ensureRule(for: selectedCatalogApp)
+                    } label: {
+                        Label(primaryActionTitle, systemImage: selectedCatalogRule == nil ? "plus" : "keyboard")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(LiquidButtonStyle(kind: .primary))
+                    .disabled(selectedCatalogApp == nil)
                 }
             }
         }
@@ -161,39 +223,65 @@ struct RulesSettingsTabView: View {
                     ruleID: selectedEditorRuleID
                 )
             } else if let selectedCatalogApp {
-                CardSurface(padding: 28) {
-                    VStack(alignment: .leading, spacing: 20) {
-                        SectionHeaderView(
-                            title: selectedCatalogApp.name,
-                            subtitle: AppStrings.text(.selectedAppNeedsRule, language: language),
-                            systemImage: "keyboard.badge.ellipsis"
-                        )
-                        .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+                LiquidPanel {
+                    VStack(alignment: .leading, spacing: 18) {
+                        HStack(alignment: .top, spacing: 14) {
+                            Image(systemName: "keyboard.badge.ellipsis")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(SettingsTheme.primary)
+                                .frame(width: 48, height: 48)
+                                .background(SettingsTheme.cardTintStrong, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .stroke(SettingsTheme.hairline, lineWidth: 1)
+                                }
 
-                        HStack {
-                            Spacer(minLength: 0)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(selectedCatalogApp.name)
+                                    .font(.system(size: 20, weight: .semibold, design: .rounded))
 
-                            Button(AppStrings.text(.createRuleForSelectedApp, language: language)) {
-                                selectedRuleID = ruleStore.ensureRule(for: selectedCatalogApp)
+                                Text(selectedCatalogApp.bundleId)
+                                    .font(.system(size: 12, weight: .regular, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+
+                                Text(AppStrings.text(.selectedAppNeedsRule, language: language))
+                                    .font(.callout)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.top, 4)
                             }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.large)
+
+                            Spacer(minLength: 0)
                         }
+
+                        Divider()
+                            .opacity(0.55)
+
+                        Button {
+                            selectedRuleID = ruleStore.ensureRule(for: selectedCatalogApp)
+                        } label: {
+                            Label(AppStrings.text(.createRuleForSelectedApp, language: language), systemImage: "plus")
+                        }
+                        .buttonStyle(LiquidButtonStyle(kind: .primary))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, minHeight: 320, alignment: .topLeading)
                 }
             } else {
-                CardSurface(padding: 28) {
-                    ContentUnavailableView(
-                        AppStrings.text(.noRuleSelected, language: language),
-                        systemImage: "keyboard"
-                    )
-                    .frame(maxWidth: .infinity, minHeight: 360)
+                LiquidPanel {
+                    if installedAppsCatalog.loadState == .loading {
+                        ProgressView()
+                            .controlSize(.large)
+                            .frame(maxWidth: .infinity, minHeight: 360)
+                    } else {
+                        ContentUnavailableView(
+                            AppStrings.text(.noRuleSelected, language: language),
+                            systemImage: "keyboard"
+                        )
+                        .frame(maxWidth: .infinity, minHeight: 360)
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .id(selectedCatalogBundleID ?? selectedRuleID?.uuidString ?? "rule-detail-empty")
     }
 
     @ViewBuilder
@@ -206,61 +294,26 @@ struct RulesSettingsTabView: View {
             .frame(maxWidth: .infinity, minHeight: 180)
         } else {
             ScrollView {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: 10) {
                     ForEach(filteredInstalledApps) { app in
                         let isSelected = selectedCatalogBundleID == app.bundleId
                         Button {
                             selectedCatalogBundleID = app.bundleId
                             selectedRuleID = ruleStore.rule(forBundleID: app.bundleId)?.id
                         } label: {
-                            SidebarRowView(
+                            SourceListRowView(
                                 title: app.name,
                                 subtitle: app.bundleId,
                                 isSelected: isSelected,
-                                tint: .accentColor,
                                 leadingIcon: "app",
-                                trailingLabel: ruleStore.rule(forBundleID: app.bundleId) != nil ? AppStrings.text(.configuredTag, language: language) : nil
+                                trailingLabel: appStateLabel(for: app)
                             )
                         }
                         .buttonStyle(.plain)
                     }
                 }
             }
-            .frame(maxHeight: 300)
-        }
-    }
-
-    @ViewBuilder
-    private var ruleList: some View {
-        if ruleStore.rules.isEmpty {
-            ContentUnavailableView(
-                AppStrings.text(.noConfiguredRules, language: language),
-                systemImage: "keyboard"
-            )
-            .frame(maxWidth: .infinity, minHeight: 180)
-        } else {
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(ruleStore.rules) { rule in
-                        let isSelected = selectedRuleID == rule.id
-                        Button {
-                            selectedRuleID = rule.id
-                            selectedCatalogBundleID = rule.bundleId
-                        } label: {
-                            SidebarRowView(
-                                title: rule.appName,
-                                subtitle: rule.bundleId,
-                                isSelected: isSelected,
-                                tint: .accentColor,
-                                leadingIcon: "keyboard",
-                                trailingLabel: rule.isEnabled ? AppStrings.text(.enabled, language: language) : AppStrings.text(.paused, language: language)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            .frame(maxHeight: 180)
+            .frame(maxHeight: 460)
         }
     }
 
@@ -270,5 +323,32 @@ struct RulesSettingsTabView: View {
         }
 
         return AppStrings.text(.createRuleForSelectedApp, language: language)
+    }
+
+    private func appStateLabel(for app: AppDescriptor) -> String {
+        guard let rule = ruleStore.rule(forBundleID: app.bundleId) else {
+            return AppStrings.text(.unconfiguredTag, language: language)
+        }
+
+        return rule.isEnabled ? AppStrings.text(.enabled, language: language) : AppStrings.text(.paused, language: language)
+    }
+}
+
+private enum RuleListFilter: String, CaseIterable, Identifiable {
+    case all
+    case configured
+    case unconfigured
+
+    var id: String { rawValue }
+
+    func title(language: AppLanguage) -> String {
+        switch self {
+        case .all:
+            return AppStrings.text(.allAppsFilter, language: language)
+        case .configured:
+            return AppStrings.text(.configuredTag, language: language)
+        case .unconfigured:
+            return AppStrings.text(.unconfiguredTag, language: language)
+        }
     }
 }

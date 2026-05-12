@@ -7,7 +7,8 @@ struct SettingsRootView: View {
     @ObservedObject var updateManager: UpdateManager
     @ObservedObject var diagnosticsCenter: DiagnosticsCenter
 
-    @State private var selectedSection: SettingsSection = .general
+    @StateObject private var installedAppsCatalog = InstalledAppsCatalogStore()
+    @State private var selectedSection: SettingsSection = .rules
 
     private var language: AppLanguage {
         settingsStore.settings.language
@@ -16,21 +17,27 @@ struct SettingsRootView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Picker("", selection: $selectedSection) {
-                    ForEach(SettingsSection.allCases) { section in
-                        Text(section.title(language: language)).tag(section)
+                HStack(alignment: .center, spacing: 16) {
+                    SettingsHeroHeader(
+                        title: AppStrings.text(.settingsWindowTitle, language: language),
+                        subtitle: BrandIdentity.displayName,
+                        systemImage: "keyboard"
+                    )
+
+                    Picker("", selection: $selectedSection) {
+                        ForEach(SettingsSection.allCases) { section in
+                            Text(section.title(language: language)).tag(section)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .frame(width: 220)
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 260)
-                .frame(maxWidth: .infinity)
 
                 selectedContent
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .frame(maxWidth: 1120, alignment: .topLeading)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 18)
+            .frame(maxWidth: 1180, alignment: .topLeading)
+            .padding(24)
         }
         .background(SettingsPageBackground())
         .background(
@@ -51,7 +58,8 @@ struct SettingsRootView: View {
         case .rules:
             RulesSettingsTabView(
                 settingsStore: settingsStore,
-                ruleStore: ruleStore
+                ruleStore: ruleStore,
+                installedAppsCatalog: installedAppsCatalog
             )
         }
     }

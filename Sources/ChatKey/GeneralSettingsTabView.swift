@@ -26,6 +26,7 @@ struct GeneralSettingsTabView: View {
                 message: AppStrings.text(.statusPermissionMissingMessage, language: language),
                 iconTint: .red,
                 iconBackground: Color.red.opacity(0.12),
+                statusIcon: "exclamationmark.triangle.fill",
                 actionTitle: AppStrings.text(.openSystemSettings, language: language)
             )
         case .paused:
@@ -34,6 +35,7 @@ struct GeneralSettingsTabView: View {
                 message: AppStrings.text(.statusPausedMessage, language: language),
                 iconTint: .orange,
                 iconBackground: Color.orange.opacity(0.14),
+                statusIcon: "pause.circle.fill",
                 actionTitle: nil
             )
         case .ready:
@@ -42,17 +44,58 @@ struct GeneralSettingsTabView: View {
                 message: AppStrings.text(.statusReadyMessage, language: language),
                 iconTint: .green,
                 iconBackground: Color.green.opacity(0.14),
+                statusIcon: "checkmark.circle.fill",
                 actionTitle: nil
             )
         }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SettingsMetrics.pageSpacing) {
-            statusPanel
-            preferencePanel
-            updatePanel
-            diagnosticsPanel
+        LiquidPanel {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(AppStrings.text(.general, language: language))
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+
+                        Text(AppStrings.text(.generalPreferencesSubtitle, language: language))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    StatusPill(
+                        title: statusPresentation.title,
+                        tint: statusPresentation.iconTint,
+                        systemImage: statusPresentation.statusIcon
+                    )
+                }
+
+                Divider()
+                    .opacity(0.55)
+
+                SettingsSectionLabel(AppStrings.text(.statusOverview, language: language))
+                statusPanel
+
+                SettingsSectionLabel(
+                    AppStrings.text(.preferences, language: language),
+                    subtitle: AppStrings.text(.generalPreferencesSubtitle, language: language)
+                )
+                controlsPanel
+
+                SettingsSectionLabel(
+                    AppStrings.text(.updates, language: language),
+                    subtitle: AppStrings.text(.generalUpdatesSubtitle, language: language)
+                )
+                updatePanel
+
+                SettingsSectionLabel(
+                    AppStrings.text(.diagnostics, language: language),
+                    subtitle: AppStrings.text(.generalDiagnosticsSubtitle, language: language)
+                )
+                diagnosticsPanel
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .onAppear {
@@ -61,157 +104,145 @@ struct GeneralSettingsTabView: View {
     }
 
     private var statusPanel: some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                SectionHeaderView(
-                    title: AppStrings.text(.statusOverview, language: language),
-                    subtitle: statusPresentation.title
-                )
+        SettingsGroup {
+            SettingsGroupRow(
+                title: AppStrings.text(.statusOverview, language: language),
+                subtitle: statusPresentation.message
+            ) {
+                HStack(spacing: 12) {
+                    Spacer(minLength: 0)
 
-                SettingsFieldRow(
-                    title: statusPresentation.title,
-                    subtitle: statusPresentation.message
-                ) {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(statusPresentation.iconBackground)
-                                .frame(width: 36, height: 36)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(statusPresentation.iconBackground)
+                            .frame(width: 36, height: 36)
 
-                            MenuBarStatusIcon(status: visualStatus)
-                                .frame(width: 22, height: 18)
+                        MenuBarStatusIcon(status: visualStatus)
+                            .frame(width: 23, height: 18)
+                    }
+
+                    Text(statusPresentation.title)
+                        .font(.system(size: 13.5, weight: .semibold))
+                        .foregroundStyle(statusPresentation.iconTint)
+
+                    if let actionTitle = statusPresentation.actionTitle {
+                        Button(actionTitle) {
+                            openAccessibilitySettings()
                         }
-
-                        if let actionTitle = statusPresentation.actionTitle {
-                            Button(actionTitle) {
-                                openAccessibilitySettings()
-                            }
-                            .buttonStyle(.bordered)
-                        }
+                        .buttonStyle(LiquidButtonStyle(kind: .secondary))
                     }
                 }
             }
         }
     }
 
-    private var preferencePanel: some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                SectionHeaderView(
-                    title: AppStrings.text(.preferences, language: language),
-                    subtitle: AppStrings.text(.generalPreferencesSubtitle, language: language)
+    private var controlsPanel: some View {
+        SettingsGroup {
+            SettingsGroupRow(title: AppStrings.text(.appWideToggle, language: language)) {
+                Toggle("", isOn: Binding(
+                    get: { settingsStore.settings.isEnabled },
+                    set: { settingsStore.setAppEnabled($0) }
+                ))
+                .labelsHidden()
+            }
+
+            SettingsDivider()
+
+            SettingsGroupRow(title: AppStrings.text(.launchAtLogin, language: language)) {
+                Toggle("", isOn: Binding(
+                    get: { settingsStore.settings.launchAtLogin },
+                    set: { settingsStore.setLaunchAtLogin($0) }
+                ))
+                .labelsHidden()
+            }
+
+            SettingsDivider()
+
+            SettingsGroupRow(title: AppStrings.text(.language, language: language)) {
+                Picker(
+                    AppStrings.text(.language, language: language),
+                    selection: Binding(
+                        get: { settingsStore.settings.language },
+                        set: { settingsStore.setLanguage($0) }
+                    )
+                ) {
+                    Text(AppStrings.text(.followSystem, language: language)).tag(AppLanguage.system)
+                    Text(AppStrings.text(.simplifiedChinese, language: language)).tag(AppLanguage.zhHans)
+                    Text(AppStrings.text(.english, language: language)).tag(AppLanguage.en)
+                }
+                .labelsHidden()
+                .frame(width: 200)
+            }
+
+            SettingsDivider()
+
+            SettingsGroupRow(title: AppStrings.text(.autoCheckUpdates, language: language)) {
+                Toggle(
+                    "",
+                    isOn: Binding(
+                        get: { settingsStore.settings.autoCheckForUpdates },
+                        set: { settingsStore.setAutoCheckForUpdates($0) }
+                    )
                 )
-
-                SettingsFieldRow(title: AppStrings.text(.appWideToggle, language: language)) {
-                    Toggle("", isOn: Binding(
-                        get: { settingsStore.settings.isEnabled },
-                        set: { settingsStore.setAppEnabled($0) }
-                    ))
-                    .labelsHidden()
-                }
-
-                SettingsFieldRow(title: AppStrings.text(.language, language: language)) {
-                    Picker(
-                        AppStrings.text(.language, language: language),
-                        selection: Binding(
-                            get: { settingsStore.settings.language },
-                            set: { settingsStore.setLanguage($0) }
-                        )
-                    ) {
-                        Text(AppStrings.text(.followSystem, language: language)).tag(AppLanguage.system)
-                        Text(AppStrings.text(.simplifiedChinese, language: language)).tag(AppLanguage.zhHans)
-                        Text(AppStrings.text(.english, language: language)).tag(AppLanguage.en)
-                    }
-                    .labelsHidden()
-                    .frame(width: 200)
-                }
+                .labelsHidden()
             }
         }
     }
 
     private var updatePanel: some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                SectionHeaderView(
-                    title: AppStrings.text(.updates, language: language),
-                    subtitle: AppStrings.text(.generalUpdatesSubtitle, language: language)
-                )
+        SettingsGroup {
+            statusRow(
+                title: AppStrings.text(.currentVersion, language: language),
+                value: updateManager.currentVersion,
+                tint: .primary
+            )
 
-                SettingsFieldRow(title: AppStrings.text(.autoCheckUpdates, language: language)) {
-                    Toggle(
-                        "",
-                        isOn: Binding(
-                            get: { settingsStore.settings.autoCheckForUpdates },
-                            set: { settingsStore.setAutoCheckForUpdates($0) }
-                        )
-                    )
-                    .labelsHidden()
-                }
+            SettingsDivider()
 
-                statusRow(
-                    title: AppStrings.text(.currentVersion, language: language),
-                    value: updateManager.currentVersion,
-                    tint: .primary
-                )
+            statusRow(
+                title: AppStrings.text(.latestStatus, language: language),
+                value: updateStatusText,
+                tint: .secondary
+            )
 
-                statusRow(
-                    title: AppStrings.text(.latestStatus, language: language),
-                    value: updateStatusText,
-                    tint: .secondary
-                )
+            SettingsDivider()
 
-                HStack(spacing: 10) {
-                    Spacer(minLength: 0)
+            HStack(spacing: 10) {
+                Spacer(minLength: 0)
 
-                    Button(AppStrings.text(.checkForUpdates, language: language)) {
-                        Task {
-                            await updateManager.checkForUpdates(using: settingsStore)
-                        }
+                Button(AppStrings.text(.checkForUpdates, language: language)) {
+                    Task {
+                        await updateManager.checkForUpdates(using: settingsStore)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .frame(minWidth: SettingsMetrics.buttonMinWidth)
-
-                    Button(AppStrings.text(.openReleasesPage, language: language)) {
-                        updateManager.openReleasesPage()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .disabled(!canOpenReleasesPage)
-                    .frame(minWidth: SettingsMetrics.buttonMinWidth)
                 }
+                .buttonStyle(LiquidButtonStyle(kind: .primary))
+                .frame(minWidth: SettingsMetrics.buttonMinWidth)
+
+                Button(AppStrings.text(.openReleasesPage, language: language)) {
+                    updateManager.openReleasesPage()
+                }
+                .buttonStyle(LiquidButtonStyle(kind: .secondary))
+                .disabled(!canOpenReleasesPage)
+                .frame(minWidth: SettingsMetrics.buttonMinWidth)
             }
+            .padding(.horizontal, SettingsMetrics.rowPadding)
+            .padding(.vertical, 10)
         }
     }
 
     private var diagnosticsPanel: some View {
-        CardSurface {
-            VStack(alignment: .leading, spacing: SettingsMetrics.sectionSpacing) {
-                SectionHeaderView(
-                    title: AppStrings.text(.diagnostics, language: language),
-                    subtitle: AppStrings.text(.generalDiagnosticsSubtitle, language: language)
-                )
+        SettingsGroup {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: diagnosticsCenter.lastErrorMessage == nil ? "exclamationmark.triangle" : "xmark.octagon.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(diagnosticsCenter.lastErrorMessage == nil ? .orange : .red)
 
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: diagnosticsCenter.lastErrorMessage == nil ? "exclamationmark.triangle" : "xmark.octagon.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(diagnosticsCenter.lastErrorMessage == nil ? .orange : .red)
-
-                    Text(diagnosticsMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(nsColor: .windowBackgroundColor).opacity(0.55))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-                        )
-                )
+                Text(diagnosticsMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding(SettingsMetrics.rowPadding)
         }
     }
 
@@ -245,7 +276,7 @@ struct GeneralSettingsTabView: View {
 
     @ViewBuilder
     private func statusRow(title: String, value: String, tint: Color) -> some View {
-        SettingsFieldRow(title: title, alignment: .top) {
+        SettingsGroupRow(title: title, alignment: .top) {
             Text(value)
                 .multilineTextAlignment(.trailing)
                 .font(.system(size: 13, weight: .semibold))
@@ -271,5 +302,6 @@ private struct GeneralStatusPresentation {
     let message: String
     let iconTint: Color
     let iconBackground: Color
+    let statusIcon: String
     let actionTitle: String?
 }
